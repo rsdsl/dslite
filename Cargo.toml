@@ -6,3 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ipnet = "2.8.0"
+rsdsl_ip_config = { git = "https://github.com/rsdsl/ip_config.git", version = "0.2.2" }
+rsdsl_netlinkd = { git = "https://github.com/rsdsl/netlinkd.git", version = "0.6.1" }
+rsdsl_netlinkd_sys = { git = "https://github.com/rsdsl/netlinkd.git", version = "0.4.0" }
+rsdsl_pd_config = { git = "https://github.com/rsdsl/pd_config.git", version = "0.1.0" }
+serde_json = "1.0"
+thiserror = "1.0"
+trust-dns-resolver = "0.22.0"
