@@ -16,6 +16,8 @@ use trust_dns_resolver::Resolver;
 const ADDR4_AFTR: Ipv4Addr = Ipv4Addr::new(192, 0, 0, 1);
 const ADDR4_B4: Ipv4Addr = Ipv4Addr::new(192, 0, 0, 2);
 
+const MAX_ATTEMPTS: usize = 3;
+
 fn main() -> Result<()> {
     println!("wait for up ppp0");
     link::wait_up("ppp0".into())?;
@@ -32,7 +34,7 @@ fn main() -> Result<()> {
 
     if let Some(ref aftr) = pdconfig.aftr {
         let local = local_address(&pdconfig)?;
-        let remote = resolve6(&pdconfig, aftr)?;
+        let remote = multitry_resolve6(&pdconfig, aftr)?;
         let _tnl = IpIp6::new("dslite0", "ppp0", local, remote)?;
 
         configure_dslite();
@@ -98,4 +100,23 @@ fn resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
 
     let addr = response.iter().next().ok_or(Error::NoDnsRecord)?;
     Ok(*addr)
+}
+
+fn multitry_resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
+    for i in 0..MAX_ATTEMPTS {
+        match resolve6(pdconfig, fqdn) {
+            Ok(v) => return Ok(v),
+            Err(e) => {
+                if i >= MAX_ATTEMPTS - 1 {
+                    return Err(e);
+                } else {
+                    println!("{}", e)
+                }
+            }
+        }
+
+        thread::sleep(Duration::from_secs(8));
+    }
+
+    unreachable!()
 }
