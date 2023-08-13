@@ -32,10 +32,11 @@ fn main() -> Result<()> {
     let mut file = File::open(rsdsl_pd_config::LOCATION)?;
     let pdconfig: PdConfig = serde_json::from_reader(&mut file)?;
 
+    let _tnl;
     if let Some(ref aftr) = pdconfig.aftr {
         let local = local_address(&pdconfig)?;
         let remote = multitry_resolve6(&pdconfig, aftr)?;
-        let _tnl = IpIp6::new("dslite0", "ppp0", local, remote)?;
+        _tnl = IpIp6::new("dslite0", "ppp0", local, remote)?;
 
         configure_dslite();
     } else {
