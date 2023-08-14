@@ -10,7 +10,7 @@ ipnet = "2.8.0"
 notify = "6.0.1"
 rsdsl_ip_config = { git = "https://github.com/rsdsl/ip_config.git", version = "0.2.2" }
 rsdsl_netlinkd = { git = "https://github.com/rsdsl/netlinkd.git", version = "0.6.2" }
-rsdsl_netlinkd_sys = { git = "https://github.com/rsdsl/netlinkd.git", version = "0.4.10" }
+rsdsl_netlinkd_sys = { git = "https://github.com/rsdsl/netlinkd.git", version = "0.4.11" }
 rsdsl_pd_config = { git = "https://github.com/rsdsl/pd_config.git", version = "0.1.0" }
 serde_json = "1.0"
 thiserror = "1.0"
