@@ -868,8 +868,8 @@ dependencies = [
 
 [[package]]
 name = "rsdsl_netlinkd"
-version = "0.6.1"
-source = "git+https://github.com/rsdsl/netlinkd.git#bf65c247f58127fe151c8fd6d4e8d56218d27b7a"
+version = "0.6.2"
+source = "git+https://github.com/rsdsl/netlinkd.git#3f8ae378a6f7c1b1b4d4dbc8f9e3ffada6342721"
 dependencies = [
  "futures",
  "futures-util",
@@ -887,7 +887,7 @@ dependencies = [
 [[package]]
 name = "rsdsl_netlinkd_sys"
 version = "0.4.9"
-source = "git+https://github.com/rsdsl/netlinkd.git#bf65c247f58127fe151c8fd6d4e8d56218d27b7a"
+source = "git+https://github.com/rsdsl/netlinkd.git#3f8ae378a6f7c1b1b4d4dbc8f9e3ffada6342721"
 dependencies = [
  "bindgen",
  "cc",
