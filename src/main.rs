@@ -5,6 +5,8 @@ use std::thread;
 use std::time::Duration;
 
 use ipnet::Ipv6Net;
+use notify::event::{CreateKind, ModifyKind};
+use notify::{Event, EventKind, RecursiveMode, Watcher};
 use rsdsl_dslite::{Error, Result};
 use rsdsl_ip_config::DsConfig;
 use rsdsl_netlinkd::{addr, link, route};
@@ -29,19 +31,41 @@ fn main() -> Result<()> {
         thread::sleep(Duration::from_secs(8));
     }
 
-    let mut file = File::open(rsdsl_pd_config::LOCATION)?;
-    let pdconfig: PdConfig = serde_json::from_reader(&mut file)?;
+    let mut tnl = None;
 
-    let _tnl;
-    if let Some(ref aftr) = pdconfig.aftr {
-        let local = local_address(&pdconfig)?;
-        let remote = multitry_resolve6(&pdconfig, aftr)?;
-        _tnl = IpIp6::new("dslite0", "ppp0", local, remote)?;
+    let do_setup = |tnl: &mut Option<IpIp6>| -> Result<()> {
+        let mut file = File::open(rsdsl_pd_config::LOCATION)?;
+        let pdconfig: PdConfig = serde_json::from_reader(&mut file)?;
 
-        configure_dslite();
-    } else {
-        println!("no aftr");
-    }
+        if let Some(ref aftr) = pdconfig.aftr {
+            let local = local_address(&pdconfig)?;
+            let remote = multitry_resolve6(&pdconfig, aftr)?;
+            *tnl = Some(IpIp6::new("dslite0", "ppp0", local, remote)?);
+
+            configure_dslite();
+        } else {
+            println!("no aftr");
+        }
+
+        Ok(())
+    };
+    let setup = move |tnl: &mut Option<IpIp6>| match do_setup(tnl) {
+        Ok(_) => {}
+        Err(e) => println!("can't create dslite0: {}", e),
+    };
+
+    setup(&mut tnl);
+
+    let mut watcher = notify::recommended_watcher(move |res: notify::Result<Event>| match res {
+        Ok(event) => match event.kind {
+            EventKind::Create(kind) if kind == CreateKind::File => setup(&mut tnl),
+            EventKind::Modify(kind) if matches!(kind, ModifyKind::Data(_)) => setup(&mut tnl),
+            _ => {}
+        },
+        Err(e) => println!("watch error: {:?}", e),
+    })?;
+
+    watcher.watch(pd_config, RecursiveMode::NonRecursive)?;
 
     loop {
         thread::sleep(Duration::MAX);

@@ -14,6 +14,8 @@ pub enum Error {
 
     #[error("ipnet prefix len: {0}")]
     IpnetPrefixLen(#[from] ipnet::PrefixLenError),
+    #[error("notify: {0}")]
+    Notify(#[from] notify::Error),
     #[error("rsdsl_netlinkd: {0}")]
     RsdslNetlinkd(#[from] rsdsl_netlinkd::error::Error),
     #[error("rsdsl_netlinkd_sys: {0}")]
