@@ -34,6 +34,8 @@ fn main() -> Result<()> {
     let mut tnl = None;
 
     let do_setup = |tnl: &mut Option<IpIp6>| -> Result<()> {
+        *tnl = None;
+
         let mut file = File::open(rsdsl_pd_config::LOCATION)?;
         let pdconfig: PdConfig = serde_json::from_reader(&mut file)?;
 
