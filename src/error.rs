@@ -4,20 +4,16 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("not enough ipv6 subnets")]
-    NotEnoughIpv6Subnets,
     #[error("no address associated with aftr name")]
     NoDnsRecord,
+    #[error("not enough ipv6 subnets")]
+    NotEnoughIpv6Subnets,
 
     #[error("io: {0}")]
     Io(#[from] io::Error),
 
     #[error("ipnet prefix len: {0}")]
     IpnetPrefixLen(#[from] ipnet::PrefixLenError),
-    #[error("notify: {0}")]
-    Notify(#[from] notify::Error),
-    #[error("rsdsl_netlinkd: {0}")]
-    RsdslNetlinkd(#[from] rsdsl_netlinkd::error::Error),
     #[error("rsdsl_netlinkd_sys: {0}")]
     RsdslNetlinkdSys(#[from] rsdsl_netlinkd_sys::Error),
     #[error("serde_json: {0}")]

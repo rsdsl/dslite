@@ -1,98 +1,52 @@
+use rsdsl_dslite::{Error, Result};
+
 use std::fs::File;
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::path::Path;
+use std::net::{Ipv6Addr, SocketAddr};
 use std::thread;
 use std::time::Duration;
 
 use ipnet::Ipv6Net;
-use notify::event::{CreateKind, ModifyKind};
-use notify::{Event, EventKind, RecursiveMode, Watcher};
-use rsdsl_dslite::{Error, Result};
-use rsdsl_ip_config::DsConfig;
-use rsdsl_netlinkd::{addr, link, route};
 use rsdsl_netlinkd_sys::IpIp6;
 use rsdsl_pd_config::PdConfig;
+use signal_hook::{consts::SIGUSR1, iterator::Signals};
+use sysinfo::{ProcessExt, Signal, System, SystemExt};
 use trust_dns_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
 use trust_dns_resolver::Resolver;
 
-const ADDR4_AFTR: Ipv4Addr = Ipv4Addr::new(192, 0, 0, 1);
-const ADDR4_B4: Ipv4Addr = Ipv4Addr::new(192, 0, 0, 2);
-
 const MAX_ATTEMPTS: usize = 3;
+const BACKOFF: u64 = 900;
 
 fn main() -> Result<()> {
-    println!("wait for up ppp0");
-    link::wait_up("ppp0".into())?;
-
-    let pd_config = Path::new(rsdsl_pd_config::LOCATION);
-
-    println!("wait for dhcp6");
-    while !pd_config.exists() {
-        thread::sleep(Duration::from_secs(8));
-    }
+    println!("[info] init");
 
     let mut tnl = None;
 
-    let do_setup = |tnl: &mut Option<IpIp6>| -> Result<()> {
-        *tnl = None;
+    let mut signals = Signals::new([SIGUSR1])?;
+    for _ in signals.forever() {
+        logic(&mut tnl)?;
+    }
 
-        let mut file = File::open(rsdsl_pd_config::LOCATION)?;
-        let pdconfig: PdConfig = serde_json::from_reader(&mut file)?;
+    unreachable!()
+}
 
-        if let Some(ref aftr) = pdconfig.aftr {
-            let local = local_address(&pdconfig)?;
-            let remote = multitry_resolve6(&pdconfig, aftr)?;
-            *tnl = Some(IpIp6::new("dslite0", "ppp0", local, remote)?);
+fn logic(tnl: &mut Option<IpIp6>) -> Result<()> {
+    *tnl = None; // Delete old tunnel.
 
-            configure_dslite();
-        } else {
-            println!("no aftr");
+    let mut file = File::open(rsdsl_pd_config::LOCATION)?;
+    let pdconfig: PdConfig = serde_json::from_reader(&mut file)?;
+
+    if let Some(ref aftr) = pdconfig.aftr {
+        let local = local_address(&pdconfig)?;
+        let remote = multitry_resolve6(&pdconfig, aftr)?;
+        *tnl = Some(IpIp6::new("dslite0", "ppp0", local, remote)?);
+
+        for netlinkd in System::default().processes_by_exact_name("/bin/rsdsl_netlinkd") {
+            netlinkd.kill_with(Signal::User1);
         }
 
-        Ok(())
-    };
-    let setup = move |tnl: &mut Option<IpIp6>| match do_setup(tnl) {
-        Ok(_) => {}
-        Err(e) => println!("can't create dslite0: {}", e),
-    };
-
-    setup(&mut tnl);
-
-    let mut watcher = notify::recommended_watcher(move |res: notify::Result<Event>| match res {
-        Ok(event) => match event.kind {
-            EventKind::Create(kind) if kind == CreateKind::File => setup(&mut tnl),
-            EventKind::Modify(kind) if matches!(kind, ModifyKind::Data(_)) => setup(&mut tnl),
-            _ => {}
-        },
-        Err(e) => println!("watch error: {:?}", e),
-    })?;
-
-    watcher.watch(pd_config, RecursiveMode::NonRecursive)?;
-
-    loop {
-        thread::sleep(Duration::MAX);
-    }
-}
-
-fn configure_dslite() {
-    match configure_dslite0() {
-        Ok(_) => println!("configure dslite0"),
-        Err(e) => println!("can't configure dslite0: {}", e),
-    }
-}
-
-fn configure_dslite0() -> Result<()> {
-    link::up("dslite0".into())?;
-
-    addr::flush("dslite0".into())?;
-    addr::add("dslite0".into(), ADDR4_B4.into(), 29)?;
-
-    let mut file = File::open(rsdsl_ip_config::LOCATION)?;
-    let dsconfig: DsConfig = serde_json::from_reader(&mut file)?;
-
-    // Check for native connectivity to avoid breaking netlinkd.
-    if dsconfig.v4.is_none() {
-        route::add4(Ipv4Addr::UNSPECIFIED, 0, Some(ADDR4_AFTR), "dslite0".into())?;
+        println!("[info] init ds-lite tunnel {} <=> {}", local, remote);
+    } else {
+        println!("[info] no aftr");
     }
 
     Ok(())
@@ -137,12 +91,15 @@ fn multitry_resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
                 if i >= MAX_ATTEMPTS - 1 {
                     return Err(e);
                 } else {
-                    println!("{}", e)
+                    println!(
+                        "[warn] resolve aftr {}: {} (attempt {}/{})",
+                        fqdn, e, i, MAX_ATTEMPTS
+                    )
                 }
             }
         }
 
-        thread::sleep(Duration::from_secs(8));
+        thread::sleep(Duration::from_secs(BACKOFF));
     }
 
     unreachable!()
