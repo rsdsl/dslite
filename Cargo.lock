@@ -683,7 +683,6 @@ name = "rsdsl_dslite"
 version = "0.1.0"
 dependencies = [
  "ipnet",
- "rsdsl_ip_config",
  "rsdsl_netlinkd_sys",
  "rsdsl_pd_config",
  "serde_json",
@@ -691,14 +690,6 @@ dependencies = [
  "sysinfo",
  "thiserror",
  "trust-dns-resolver",
-]
-
-[[package]]
-name = "rsdsl_ip_config"
-version = "0.2.2"
-source = "git+https://github.com/rsdsl/ip_config.git#3239a5eeef22de4c50d4d00a9f51bebb5207633c"
-dependencies = [
- "serde",
 ]
 
 [[package]]
