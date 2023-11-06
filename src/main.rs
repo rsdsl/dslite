@@ -6,7 +6,7 @@ use std::thread;
 use std::time::Duration;
 
 use ipnet::Ipv6Net;
-use rsdsl_netlinkd_sys::IpIp6;
+use rsdsl_netlinkd::tunnel::IpIp6;
 use rsdsl_pd_config::PdConfig;
 use signal_hook::{consts::SIGUSR1, iterator::Signals};
 use sysinfo::{ProcessExt, Signal, System, SystemExt};
@@ -38,7 +38,12 @@ fn logic(tnl: &mut Option<IpIp6>) -> Result<()> {
     if let Some(ref aftr) = pdconfig.aftr {
         let local = local_address(&pdconfig)?;
         let remote = multitry_resolve6(&pdconfig, aftr)?;
-        *tnl = Some(IpIp6::new("dslite0", "ppp0", local, remote)?);
+        *tnl = Some(IpIp6::new(
+            "dslite0".to_string(),
+            "ppp0".to_string(),
+            local,
+            remote,
+        )?);
 
         for netlinkd in System::default().processes_by_exact_name("/bin/rsdsl_netlinkd") {
             netlinkd.kill_with(Signal::User1);

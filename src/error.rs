@@ -14,8 +14,8 @@ pub enum Error {
 
     #[error("ipnet prefix len: {0}")]
     IpnetPrefixLen(#[from] ipnet::PrefixLenError),
-    #[error("rsdsl_netlinkd_sys: {0}")]
-    RsdslNetlinkdSys(#[from] rsdsl_netlinkd_sys::Error),
+    #[error("rsdsl_netlinkd: {0}")]
+    RsdslNetlinkd(#[from] rsdsl_netlinkd::Error),
     #[error("serde_json: {0}")]
     SerdeJson(#[from] serde_json::Error),
     #[error("trust_dns_resolver resolve: {0}")]
