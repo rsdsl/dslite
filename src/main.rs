@@ -45,7 +45,7 @@ fn logic(tnl: &mut Option<IpIp6>) -> Result<()> {
             remote,
         )?);
 
-        for netlinkd in System::default().processes_by_exact_name("/bin/rsdsl_netlinkd") {
+        for netlinkd in System::new_all().processes_by_exact_name("rsdsl_netlinkd") {
             netlinkd.kill_with(Signal::User1);
         }
 
