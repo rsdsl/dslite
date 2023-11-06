@@ -710,8 +710,8 @@ dependencies = [
 
 [[package]]
 name = "rsdsl_netlinkd"
-version = "0.7.0"
-source = "git+https://github.com/rsdsl/netlinkd.git#633b9bd742ee9a5204538b32558ceb41c1e5aa7d"
+version = "0.7.1"
+source = "git+https://github.com/rsdsl/netlinkd.git#ed35bb384a77ba78baa6898df45ef4e7150a9df2"
 dependencies = [
  "bitfield",
  "futures",
