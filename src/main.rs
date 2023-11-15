@@ -4,14 +4,14 @@ use std::net::{Ipv6Addr, SocketAddr};
 use std::thread;
 use std::time::Duration;
 
+use hickory_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
+use hickory_resolver::Resolver;
 use ipnet::Ipv6Net;
 use rsdsl_netlinklib::tunnel::IpIp6;
 use rsdsl_pd_config::PdConfig;
 use signal_hook::{consts::SIGUSR1, iterator::Signals};
 use sysinfo::{ProcessExt, Signal, System, SystemExt};
 use thiserror::Error;
-use trust_dns_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
-use trust_dns_resolver::Resolver;
 
 const MAX_ATTEMPTS: usize = 3;
 const BACKOFF: u64 = 900;
@@ -23,17 +23,17 @@ pub enum Error {
     #[error("not enough ipv6 subnets")]
     NotEnoughIpv6Subnets,
 
-    #[error("io: {0}")]
+    #[error("io error: {0}")]
     Io(#[from] io::Error),
 
-    #[error("ipnet prefix len: {0}")]
+    #[error("invalid prefix length: {0}")]
     IpnetPrefixLen(#[from] ipnet::PrefixLenError),
     #[error("netlinklib error: {0}")]
     Netlinklib(#[from] rsdsl_netlinklib::Error),
-    #[error("serde_json: {0}")]
+    #[error("serde_json error: {0}")]
     SerdeJson(#[from] serde_json::Error),
-    #[error("trust_dns_resolver resolve: {0}")]
-    TrustDnsResolverResolve(#[from] trust_dns_resolver::error::ResolveError),
+    #[error("hickory_resolver resolve error: {0}")]
+    TrustDnsResolverResolve(#[from] hickory_resolver::error::ResolveError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -107,7 +107,7 @@ fn resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
     let response = resolver.ipv6_lookup(fqdn)?;
 
     let addr = response.iter().next().ok_or(Error::NoDnsRecord)?;
-    Ok(*addr)
+    Ok(**addr)
 }
 
 fn multitry_resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
