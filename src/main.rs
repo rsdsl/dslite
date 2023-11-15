@@ -1,6 +1,5 @@
-use rsdsl_dslite::{Error, Result};
-
 use std::fs::File;
+use std::io;
 use std::net::{Ipv6Addr, SocketAddr};
 use std::thread;
 use std::time::Duration;
@@ -10,11 +9,34 @@ use rsdsl_netlinklib::tunnel::IpIp6;
 use rsdsl_pd_config::PdConfig;
 use signal_hook::{consts::SIGUSR1, iterator::Signals};
 use sysinfo::{ProcessExt, Signal, System, SystemExt};
+use thiserror::Error;
 use trust_dns_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
 use trust_dns_resolver::Resolver;
 
 const MAX_ATTEMPTS: usize = 3;
 const BACKOFF: u64 = 900;
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("no address associated with aftr name")]
+    NoDnsRecord,
+    #[error("not enough ipv6 subnets")]
+    NotEnoughIpv6Subnets,
+
+    #[error("io: {0}")]
+    Io(#[from] io::Error),
+
+    #[error("ipnet prefix len: {0}")]
+    IpnetPrefixLen(#[from] ipnet::PrefixLenError),
+    #[error("netlinklib error: {0}")]
+    Netlinklib(#[from] rsdsl_netlinklib::Error),
+    #[error("serde_json: {0}")]
+    SerdeJson(#[from] serde_json::Error),
+    #[error("trust_dns_resolver resolve: {0}")]
+    TrustDnsResolverResolve(#[from] trust_dns_resolver::error::ResolveError),
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
 
 fn main() -> Result<()> {
     println!("[info] init");
