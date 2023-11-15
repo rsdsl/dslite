@@ -33,7 +33,7 @@ pub enum Error {
     #[error("serde_json error: {0}")]
     SerdeJson(#[from] serde_json::Error),
     #[error("hickory_resolver resolve error: {0}")]
-    TrustDnsResolverResolve(#[from] hickory_resolver::error::ResolveError),
+    HickoryResolverResolve(#[from] hickory_resolver::error::ResolveError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
