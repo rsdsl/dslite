@@ -6,7 +6,7 @@ use std::thread;
 use std::time::Duration;
 
 use ipnet::Ipv6Net;
-use rsdsl_netlinkd::tunnel::IpIp6;
+use rsdsl_netlinklib::tunnel::IpIp6;
 use rsdsl_pd_config::PdConfig;
 use signal_hook::{consts::SIGUSR1, iterator::Signals};
 use sysinfo::{ProcessExt, Signal, System, SystemExt};

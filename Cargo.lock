@@ -56,12 +56,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bitfield"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d7e60934ceec538daadb9d8432424ed043a904d8e0243f3c6446bce549a46ac"
-
-[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -691,7 +685,7 @@ name = "rsdsl_dslite"
 version = "0.1.0"
 dependencies = [
  "ipnet",
- "rsdsl_netlinkd",
+ "rsdsl_netlinklib",
  "rsdsl_pd_config",
  "serde_json",
  "signal-hook",
@@ -701,30 +695,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "rsdsl_ip_config"
-version = "0.2.4"
-source = "git+https://github.com/rsdsl/ip_config.git#b68885346f4aa8a3216645c65e92f7c7a2c5ff51"
+name = "rsdsl_netlinklib"
+version = "0.2.0"
+source = "git+https://github.com/rsdsl/netlinklib.git#fa4720e74d3f93f6c908e479d9fbb90d54b9ba8c"
 dependencies = [
- "serde",
-]
-
-[[package]]
-name = "rsdsl_netlinkd"
-version = "0.7.1"
-source = "git+https://github.com/rsdsl/netlinkd.git#ed35bb384a77ba78baa6898df45ef4e7150a9df2"
-dependencies = [
- "bitfield",
  "futures",
- "futures-util",
- "ipnet",
  "libc",
  "netlink-packet-route",
- "rsdsl_ip_config",
- "rsdsl_pd_config",
  "rtnetlink",
- "serde_json",
- "signal-hook",
- "sysinfo",
  "thiserror",
  "tokio",
 ]
