@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io;
 use std::net::{Ipv6Addr, SocketAddr};
+use std::path::Path;
 use std::thread;
 use std::time::Duration;
 
@@ -53,6 +54,11 @@ fn main() -> Result<()> {
 
 fn logic(tnl: &mut Option<IpIp6>) -> Result<()> {
     *tnl = None; // Delete old tunnel.
+
+    if !Path::new(rsdsl_pd_config::LOCATION).exists() {
+        println!("[info] ipv6 down");
+        return Ok(());
+    }
 
     let mut file = File::open(rsdsl_pd_config::LOCATION)?;
     let pdconfig: PdConfig = serde_json::from_reader(&mut file)?;
