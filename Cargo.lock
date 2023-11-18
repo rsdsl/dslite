@@ -603,12 +603,13 @@ dependencies = [
 
 [[package]]
 name = "rsdsl_netlinklib"
-version = "0.3.0"
-source = "git+https://github.com/rsdsl/netlinklib.git#2c20dc2932696cb87ea7e6eb5327b7dccf0e9b1b"
+version = "0.4.2"
+source = "git+https://github.com/rsdsl/netlinklib.git#1954c7c7e975104fa651ccded4358826e8b3c8d8"
 dependencies = [
  "futures",
  "libc",
  "netlink-packet-route",
+ "netlink-proto",
  "rtnetlink",
  "thiserror",
  "tokio",
