@@ -603,8 +603,8 @@ dependencies = [
 
 [[package]]
 name = "rsdsl_netlinklib"
-version = "0.4.3"
-source = "git+https://github.com/rsdsl/netlinklib.git#526c694bcdb08da99aab6da308775fe5e0164b95"
+version = "0.4.4"
+source = "git+https://github.com/rsdsl/netlinklib.git#b37c7a2b7692a4f8aa57865df4c00de07a5666dc"
 dependencies = [
  "futures",
  "libc",
