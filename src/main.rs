@@ -160,9 +160,12 @@ fn multitry_resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
 }
 
 fn unchanged(local: Ipv6Addr, remote: Ipv6Addr, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> bool {
-    if let Some(last) = last {
+    let unchanged = if let Some(last) = last {
         local == last.0 && remote == last.1
     } else {
         false
-    }
+    };
+
+    *last = Some((local, remote));
+    unchanged
 }
