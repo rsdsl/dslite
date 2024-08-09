@@ -15,7 +15,7 @@ use sysinfo::{ProcessExt, Signal, System, SystemExt};
 use thiserror::Error;
 
 const MAX_ATTEMPTS: usize = 3;
-const BACKOFF: u64 = 900;
+const BACKOFF: u64 = 30;
 
 #[derive(Debug, Error)]
 pub enum Error {
