@@ -43,20 +43,26 @@ fn main() -> Result<()> {
     println!("[info] init");
 
     let mut tnl = None;
+    let mut last = None;
 
     let mut signals = Signals::new([SIGUSR1])?;
     for _ in signals.forever() {
-        logic(&mut tnl)?;
+        logic(&mut tnl, &mut last)?;
     }
 
     unreachable!()
 }
 
-fn logic(tnl: &mut Option<IpIp6>) -> Result<()> {
-    *tnl = None; // Delete old tunnel.
-
+fn logic(tnl: &mut Option<IpIp6>, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> Result<()> {
     if !Path::new(rsdsl_pd_config::LOCATION).exists() {
         println!("[info] ipv6 down");
+
+        *tnl = None; // Delete tunnel.
+
+        for netlinkd in System::new_all().processes_by_exact_name("rsdsl_netlinkd") {
+            netlinkd.kill_with(Signal::User1);
+        }
+
         return Ok(());
     }
 
@@ -66,6 +72,12 @@ fn logic(tnl: &mut Option<IpIp6>) -> Result<()> {
     if let Some(ref aftr) = pdconfig.aftr {
         let local = local_address(&pdconfig)?;
         let remote = multitry_resolve6(&pdconfig, aftr)?;
+
+        if unchanged(local, remote, last) {
+            println!("[info] no change");
+            return Ok(());
+        }
+
         *tnl = Some(IpIp6::new(
             "dslite0".to_string(),
             "ppp0".to_string(),
@@ -79,6 +91,12 @@ fn logic(tnl: &mut Option<IpIp6>) -> Result<()> {
 
         println!("[info] init ds-lite tunnel {} <=> {}", local, remote);
     } else {
+        *tnl = None; // Delete tunnel (if any).
+
+        for netlinkd in System::new_all().processes_by_exact_name("rsdsl_netlinkd") {
+            netlinkd.kill_with(Signal::User1);
+        }
+
         println!("[info] no aftr");
     }
 
@@ -136,4 +154,12 @@ fn multitry_resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
     }
 
     unreachable!()
+}
+
+fn unchanged(local: Ipv6Addr, remote: Ipv6Addr, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> bool {
+    if let Some(last) = last {
+        local == last.0 && remote == last.1
+    } else {
+        false
+    }
 }
