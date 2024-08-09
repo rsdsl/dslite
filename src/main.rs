@@ -80,6 +80,7 @@ fn logic(tnl: &mut Option<IpIp6>, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> Re
             return Ok(());
         }
 
+        *tnl = None; // Delete tunnel first, otherwise creation fails with "file exists".
         *tnl = Some(IpIp6::new(
             "dslite0".to_string(),
             "ppp0".to_string(),
