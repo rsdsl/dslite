@@ -45,6 +45,8 @@ fn main() -> Result<()> {
     let mut tnl = None;
     let mut last = None;
 
+    logic(&mut tnl, &mut last)?;
+
     let mut signals = Signals::new([SIGUSR1])?;
     for _ in signals.forever() {
         logic(&mut tnl, &mut last)?;
@@ -55,7 +57,7 @@ fn main() -> Result<()> {
 
 fn logic(tnl: &mut Option<IpIp6>, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> Result<()> {
     if !Path::new(rsdsl_pd_config::LOCATION).exists() {
-        println!("[info] ipv6 down");
+        println!("[info] no lease");
 
         *tnl = None; // Delete tunnel.
 
