@@ -1,9 +1,8 @@
 use std::fs::File;
-use std::io;
 use std::net::{Ipv6Addr, SocketAddr};
 use std::path::Path;
-use std::thread;
 use std::time::Duration;
+use std::{fmt, io, thread};
 
 use hickory_resolver::config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts};
 use hickory_resolver::Resolver;
@@ -12,30 +11,70 @@ use rsdsl_netlinklib::tunnel::IpIp6;
 use rsdsl_pd_config::PdConfig;
 use signal_hook::{consts::SIGUSR1, iterator::Signals};
 use sysinfo::{ProcessExt, Signal, System, SystemExt};
-use thiserror::Error;
 
 const MAX_ATTEMPTS: usize = 3;
 const BACKOFF: u64 = 30;
 
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum Error {
-    #[error("no address associated with aftr name")]
     NoDnsRecord,
-    #[error("not enough ipv6 subnets")]
     NotEnoughIpv6Subnets,
 
-    #[error("io error: {0}")]
-    Io(#[from] io::Error),
+    Io(io::Error),
 
-    #[error("invalid prefix length: {0}")]
-    IpnetPrefixLen(#[from] ipnet::PrefixLenError),
-    #[error("netlinklib error: {0}")]
-    Netlinklib(#[from] rsdsl_netlinklib::Error),
-    #[error("serde_json error: {0}")]
-    SerdeJson(#[from] serde_json::Error),
-    #[error("hickory_resolver resolve error: {0}")]
-    HickoryResolverResolve(#[from] hickory_resolver::error::ResolveError),
+    IpnetPrefixLen(ipnet::PrefixLenError),
+    Netlinklib(rsdsl_netlinklib::Error),
+    SerdeJson(serde_json::Error),
+    HickoryResolverResolve(hickory_resolver::error::ResolveError),
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NoDnsRecord => write!(f, "no address associated with aftr name")?,
+            Self::NotEnoughIpv6Subnets => write!(f, "not enough ipv6 subnets")?,
+            Self::Io(e) => write!(f, "io error: {}", e)?,
+            Self::IpnetPrefixLen(e) => write!(f, "invalid prefix length: {}", e)?,
+            Self::Netlinklib(e) => write!(f, "netlinklib error: {}", e)?,
+            Self::SerdeJson(e) => write!(f, "serde_json error: {}", e)?,
+            Self::HickoryResolverResolve(e) => write!(f, "hickory_resolver resolve error: {}", e)?,
+        }
+
+        Ok(())
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Error {
+        Error::Io(e)
+    }
+}
+
+impl From<ipnet::PrefixLenError> for Error {
+    fn from(e: ipnet::PrefixLenError) -> Error {
+        Error::IpnetPrefixLen(e)
+    }
+}
+
+impl From<rsdsl_netlinklib::Error> for Error {
+    fn from(e: rsdsl_netlinklib::Error) -> Error {
+        Error::Netlinklib(e)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Error {
+        Error::SerdeJson(e)
+    }
+}
+
+impl From<hickory_resolver::error::ResolveError> for Error {
+    fn from(e: hickory_resolver::error::ResolveError) -> Error {
+        Error::HickoryResolverResolve(e)
+    }
+}
+
+impl std::error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
 
