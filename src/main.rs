@@ -79,7 +79,7 @@ impl std::error::Error for Error {}
 pub type Result<T> = std::result::Result<T, Error>;
 
 fn main() -> Result<()> {
-    println!("[info] init");
+    eprintln!("[info] init");
 
     let mut tnl = None;
     let mut last = None;
@@ -96,7 +96,7 @@ fn main() -> Result<()> {
 
 fn logic(tnl: &mut Option<IpIp6>, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> Result<()> {
     if !Path::new(rsdsl_pd_config::LOCATION).exists() {
-        println!("[info] no lease");
+        eprintln!("[info] no lease");
 
         *tnl = None; // Delete tunnel.
 
@@ -115,7 +115,7 @@ fn logic(tnl: &mut Option<IpIp6>, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> Re
         let remote = multitry_resolve6(&pdconfig, aftr)?;
 
         if unchanged(local, remote, last) {
-            println!("[info] no change");
+            eprintln!("[info] no change");
             return Ok(());
         }
 
@@ -131,7 +131,7 @@ fn logic(tnl: &mut Option<IpIp6>, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> Re
             netlinkd.kill_with(Signal::User1);
         }
 
-        println!("[info] init ds-lite tunnel {} <=> {}", local, remote);
+        eprintln!("[info] init ds-lite tunnel {} <=> {}", local, remote);
     } else {
         *tnl = None; // Delete tunnel (if any).
 
@@ -139,7 +139,7 @@ fn logic(tnl: &mut Option<IpIp6>, last: &mut Option<(Ipv6Addr, Ipv6Addr)>) -> Re
             netlinkd.kill_with(Signal::User1);
         }
 
-        println!("[info] no aftr");
+        eprintln!("[info] no aftr");
     }
 
     Ok(())
@@ -184,7 +184,7 @@ fn multitry_resolve6(pdconfig: &PdConfig, fqdn: &str) -> Result<Ipv6Addr> {
                 if i >= MAX_ATTEMPTS - 1 {
                     return Err(e);
                 } else {
-                    println!(
+                    eprintln!(
                         "[warn] resolve aftr {}: {} (attempt {}/{})",
                         fqdn, e, i, MAX_ATTEMPTS
                     )
